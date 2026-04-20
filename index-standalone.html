@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moon Explorer</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #000; color: #fff; overflow: hidden; }
+    #map { width: 100vw; height: 100vh; background: #0a0a0f; }
+    .leaflet-container { background: #0a0a0f !important; }
+    .leaflet-control-layers { background: rgba(20,20,30,0.9) !important; border: 1px solid rgba(255,255,255,0.2) !important; color: #fff !important; }
+    .leaflet-control-layers-label { color: #fff !important; }
+    .leaflet-control-zoom { border: none !important; }
+    .leaflet-control-zoom a { background: rgba(20,20,30,0.9) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.2) !important; }
+    .leaflet-control-zoom a:hover { background: rgba(42,157,244,0.5) !important; }
+    #info { position: fixed; bottom: 20px; left: 20px; background: rgba(20,20,30,0.9); padding: 12px 16px; border-radius: 8px; font-family: monospace; font-size: 14px; border: 1px solid rgba(255,255,255,0.2); z-index: 1000; }
+    #search { position: fixed; top: 20px; right: 20px; width: 280px; z-index: 1000; }
+    #search input { width: 100%; padding: 12px 16px; background: rgba(20,20,30,0.95); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #fff; font-size: 14px; outline: none; }
+    #search input:focus { border-color: #2a9df4; box-shadow: 0 0 0 2px rgba(42,157,244,0.3); }
+    #search input::placeholder { color: #888; }
+    #results { margin-top: 8px; background: rgba(20,20,30,0.95); border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); max-height: 300px; overflow-y: auto; }
+    .result { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .result:last-child { border-bottom: none; }
+    .result:hover { background: rgba(42,157,244,0.3); }
+    .result b { color: #fff; display: block; }
+    .result span { color: #888; font-size: 12px; }
+    .result small { color: #666; font-size: 11px; display: block; margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="info">
+    <div>Lat: <span id="lat">--</span>°</div>
+    <div>Lon: <span id="lon">--</span>°</div>
+    <div>Zoom: <span id="zoom">--</span></div>
+  </div>
+  <div id="search">
+    <input type="text" id="searchInput" placeholder="Search craters, maria...">
+    <div id="results"></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const features = [
+      { name: 'Tycho', lat: 43.37, lon: -11.35, type: 'Crater' },
+      { name: 'Copernicus', lat: 9.62, lon: -20.08, type: 'Crater' },
+      { name: 'Aristarchus', lat: 23.73, lon: -47.49, type: 'Crater' },
+      { name: 'Kepler', lat: 32.08, lon: -38.01, type: 'Crater' },
+      { name: 'Plato', lat: 51.62, lon: -9.38, type: 'Crater' },
+      { name: 'Gassendi', lat: -17.55, lon: -39.97, type: 'Crater' },
+      { name: 'Grimaldi', lat: -5.48, lon: -68.64, type: 'Crater' },
+      { name: 'Shackleton', lat: -89.63, lon: 126.27, type: 'Crater' },
+      { name: 'Mare Crisium', lat: 17.0, lon: 59.1, type: 'Mare' },
+      { name: 'Mare Tranquillitatis', lat: 8.5, lon: 31.4, type: 'Mare' },
+      { name: 'Mare Imbrium', lat: 32.8, lon: -15.2, type: 'Mare' },
+      { name: 'Mare Serenitatis', lat: 28.0, lon: 17.5, type: 'Mare' },
+      { name: 'Mare Nubium', lat: -21.0, lon: -17.0, type: 'Mare' },
+      { name: 'Oceanus Procellarum', lat: 18.0, lon: -15.0, type: 'Mare' },
+    ];
+
+    const map = L.map('map', {
+      center: [0, 0],
+      zoom: 2,
+      minZoom: 1,
+      maxZoom: 12,
+      zoomControl: true,
+    });
+
+    // Lunaserv WMS - LROC Team's service
+    const lunaserv = L.tileLayer.wms('https://lunaserv.im-ldi.com/lunaserv', {
+      layers: 'moon_wac_global_color',
+      format: 'image/png',
+      transparent: true,
+      crs: L.CRS.EPSG4326,
+    });
+
+    // OpenPlanetaryMap (works reliably)
+    const opm = L.tileLayer(
+      'https://cartocdn-gusc.global.ssl.fastly.net/opmbuilder/api/v1/map/named/opm-moon-basemap-v0-1/all/{z}/{x}/{y}.png',
+      { maxZoom: 10 }
+    );
+
+    // ArcGIS World Imagery
+    const arcgis = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      { maxZoom: 19 }
+    );
+
+    // Default to Lunaserv
+    lunaserv.addTo(map);
+
+    // Layer control
+    const baseMaps = {
+      'Lunaserv WMS (LROC)': lunaserv,
+      'OpenPlanetaryMap': opm,
+      'ArcGIS Imagery': arcgis,
+    };
+    L.control.layers(baseMaps).addTo(map);
+
+    // Update coordinates
+    map.on('mousemove', (e) => {
+      document.getElementById('lat').textContent = e.latlng.lat.toFixed(4);
+      document.getElementById('lon').textContent = e.latlng.lng.toFixed(4);
+    });
+
+    map.on('zoomend', () => {
+      document.getElementById('zoom').textContent = map.getZoom();
+    });
+
+    // Search
+    const searchInput = document.getElementById('searchInput');
+    const results = document.getElementById('results');
+
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.toLowerCase().trim();
+      if (q.length < 2) { results.innerHTML = ''; return; }
+
+      const matches = features.filter(f => 
+        f.name.toLowerCase().includes(q) || f.type.toLowerCase().includes(q)
+      ).slice(0, 6);
+
+      results.innerHTML = matches.map(f => `
+        <div class="result" data-lat="${f.lat}" data-lon="${f.lon}">
+          <b>${f.name}</b>
+          <span>${f.type}</span>
+          <small>${f.lat.toFixed(2)}°, ${f.lon.toFixed(2)}°</small>
+        </div>
+      `).join('');
+
+      results.querySelectorAll('.result').forEach(el => {
+        el.addEventListener('click', () => {
+          const lat = parseFloat(el.dataset.lat);
+          const lon = parseFloat(el.dataset.lon);
+          map.flyTo([lat, lon], 8, { duration: 1 });
+          results.innerHTML = '';
+          searchInput.value = '';
+        });
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!searchInput.contains(e.target) && !results.contains(e.target)) {
+        results.innerHTML = '';
+      }
+    });
+  </script>
+</body>
+</html>
