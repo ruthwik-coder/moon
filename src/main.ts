@@ -8,11 +8,16 @@ import { DensityHeatmap } from './craters/density-heatmap';
 import { LayerTogglePanel } from './layers/layer-toggle';
 import { TopoOverlay } from './layers/topo-overlay';
 import { HazardZonesLayer } from './layers/hazard-zones';
+import { MineralLayer } from './layers/mineral-layer';
 import { AnalysisPanel } from './ui/analysis-panel';
 import { LegendPanel } from './ui/legend-panel';
 import { MeasurementTool } from './tools/measurement-tool';
 import { ScreenshotExport } from './tools/screenshot-export';
+import { ProcessingPanel } from './ui/processing-panel';
+import { autoLoadOpenCV } from './image-processing/opencv-loader';
 import type { LayerVisibility } from './features/types';
+
+autoLoadOpenCV();
 
 const map = L.map('map', {
   center: [0, 0],
@@ -37,6 +42,7 @@ const trekWacLayer = L.tileLayer(
     minZoom: 0,
     maxZoom: 7,
     errorTileUrl: TRANSPARENT_1PX,
+    crossOrigin: 'anonymous',
   }
 );
 
@@ -49,6 +55,7 @@ const usgsNAC = L.tileLayer.wms(
     minZoom: 6,
     maxZoom: 7,
     attribution: 'USGS Astrogeology LROC NAC',
+    crossOrigin: 'anonymous',
   }
 );
 
@@ -61,6 +68,31 @@ const usgsWAC = L.tileLayer.wms(
     minZoom: 0,
     maxZoom: 6,
     attribution: 'USGS Astrogeology LROC WAC',
+    crossOrigin: 'anonymous',
+  }
+);
+
+const ironAbundance = L.tileLayer.wms(
+  'https://planetarymaps.usgs.gov/cgi-bin/mapserv?map=/maps/earth/moon_simp_cyl.map',
+  {
+    layers: 'Lunar_Prospector_GRS_Iron',
+    format: 'image/png',
+    transparent: true,
+    opacity: 0.6,
+    attribution: 'USGS/NASA Lunar Prospector GRS',
+    crossOrigin: 'anonymous',
+  }
+);
+
+const clementineMineral = L.tileLayer.wms(
+  'https://planetarymaps.usgs.gov/cgi-bin/mapserv?map=/maps/earth/moon_simp_cyl.map',
+  {
+    layers: 'Clementine_Color_Ratio',
+    format: 'image/png',
+    transparent: true,
+    opacity: 0.6,
+    attribution: 'USGS/NASA Clementine',
+    crossOrigin: 'anonymous',
   }
 );
 
@@ -70,7 +102,12 @@ const baseLayers = {
   'NAC (USGS WMS)': usgsNAC,
 };
 
-L.control.layers(baseLayers, {}, { position: 'topright' }).addTo(map);
+const overlayLayers = {
+  'Iron Abundance (GRS)': ironAbundance,
+  'Clementine Mineral Ratio': clementineMineral,
+};
+
+L.control.layers(baseLayers, overlayLayers, { position: 'topright' }).addTo(map);
 
 trekWacLayer.addTo(map);
 
@@ -80,6 +117,7 @@ const craterLayer = new CraterLayer();
 const densityHeatmap = new DensityHeatmap();
 const topoOverlay = new TopoOverlay();
 const hazardZones = new HazardZonesLayer();
+const mineralLayer = new MineralLayer();
 
 craterLayer.bindMap(map);
 craterLayer.loadCraters(DEEPMOON_CATALOGUES);
@@ -92,6 +130,7 @@ if (geoJsonLayer) geoJsonLayer.addTo(map);
 if (labelLayer) labelLayer.addTo(map);
 densityHeatmap.addTo(map);
 hazardZones.addTo(map);
+mineralLayer.addTo(map);
 
 let layerVisibility: LayerVisibility = {
   simple: true,
@@ -100,6 +139,7 @@ let layerVisibility: LayerVisibility = {
   heatmap: true,
   topo: false,
   hazard: false,
+  minerals: true,
 };
 
 topoOverlay.removeFrom();
@@ -120,6 +160,8 @@ const handleLayerToggle = (layer: keyof LayerVisibility, visible: boolean) => {
     }
   } else if (layer === 'hazard') {
     hazardZones.setVisible(visible);
+  } else if (layer === 'minerals') {
+    mineralLayer.setVisible(visible);
   }
 };
 
@@ -156,6 +198,13 @@ colorModeBtn.addEventListener('click', () => {
   legendPanel.setColorMode(newMode);
 });
 document.body.appendChild(colorModeBtn);
+
+const processingPanel = new ProcessingPanel(map);
+const processToggleBtn = document.createElement('button');
+processToggleBtn.id = 'process-toggle-btn';
+processToggleBtn.textContent = 'Process';
+processToggleBtn.addEventListener('click', () => processingPanel.toggle());
+document.body.appendChild(processToggleBtn);
 
 const screenshotExport = new ScreenshotExport(map);
 const screenshotBtn = document.createElement('button');

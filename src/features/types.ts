@@ -37,6 +37,7 @@ export interface LayerVisibility {
   heatmap: boolean;
   topo: boolean;
   hazard: boolean;
+  minerals: boolean;
 }
 
 export interface HazardZone {
