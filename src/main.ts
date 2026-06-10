@@ -14,6 +14,7 @@ import { LegendPanel } from './ui/legend-panel';
 import { MeasurementTool } from './tools/measurement-tool';
 import { ScreenshotExport } from './tools/screenshot-export';
 import { ProcessingPanel } from './ui/processing-panel';
+import { SafeLandingLayer } from './layers/landing-layer';
 import { autoLoadOpenCV } from './image-processing/opencv-loader';
 import type { LayerVisibility } from './features/types';
 
@@ -118,6 +119,7 @@ const densityHeatmap = new DensityHeatmap();
 const topoOverlay = new TopoOverlay();
 const hazardZones = new HazardZonesLayer();
 const mineralLayer = new MineralLayer();
+const safeLandingLayer = new SafeLandingLayer();
 
 craterLayer.bindMap(map);
 craterLayer.loadCraters(DEEPMOON_CATALOGUES);
@@ -131,6 +133,7 @@ if (labelLayer) labelLayer.addTo(map);
 densityHeatmap.addTo(map);
 hazardZones.addTo(map);
 mineralLayer.addTo(map);
+safeLandingLayer.addTo(map);
 
 let layerVisibility: LayerVisibility = {
   simple: true,
@@ -140,6 +143,7 @@ let layerVisibility: LayerVisibility = {
   topo: false,
   hazard: false,
   minerals: true,
+  landing: true,
 };
 
 topoOverlay.removeFrom();
@@ -162,6 +166,8 @@ const handleLayerToggle = (layer: keyof LayerVisibility, visible: boolean) => {
     hazardZones.setVisible(visible);
   } else if (layer === 'minerals') {
     mineralLayer.setVisible(visible);
+  } else if (layer === 'landing') {
+    safeLandingLayer.setVisible(visible);
   }
 };
 

@@ -1571,6 +1571,42 @@ body {
   margin-bottom: 6px;
 }
 
+/* === Landing Zone Popup === */
+
+.landing-popup .leaflet-popup-content-wrapper {
+  background: rgba(15, 30, 20, 0.97);
+  color: #e8e8e8;
+  border: 1px solid rgba(66, 217, 168, 0.25);
+  border-radius: 8px;
+}
+
+.landing-popup .leaflet-popup-tip {
+  background: rgba(15, 30, 20, 0.97);
+  border: 1px solid rgba(66, 217, 168, 0.25);
+}
+
+.landing-popup-content h4 {
+  font-size: 14px;
+}
+
+.landing-popup-content .popup-label {
+  font-size: 10px;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.landing-popup-content .popup-section {
+  margin-bottom: 6px;
+}
+
+/* === Layer Toggle — Landing Zone Icon === */
+.layer-icon.landing {
+  color: #42d9a8;
+}
+
 @media (max-width: 768px) {
   .layer-panel {
     width: calc(100% - 32px);

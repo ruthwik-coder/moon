@@ -10,6 +10,7 @@ const LAYER_LABELS: Record<keyof LayerVisibility, string> = {
   topo: 'Topographic Overlay',
   hazard: 'Hazard Zones',
   minerals: 'Mineral Deposits',
+  landing: 'Safe Landing Zones',
 };
 
 const LAYER_ICONS: Record<keyof LayerVisibility, string> = {
@@ -20,6 +21,7 @@ const LAYER_ICONS: Record<keyof LayerVisibility, string> = {
   topo: '▨',
   hazard: '⚠',
   minerals: '◆',
+  landing: '⬟',
 };
 
 export class LayerTogglePanel {
@@ -55,7 +57,7 @@ export class LayerTogglePanel {
         <div class="layer-section">
           <h4>Analysis Layers</h4>
           ${(Object.keys(LAYER_LABELS) as Array<keyof LayerVisibility>)
-            .filter(k => ['heatmap', 'topo', 'hazard', 'minerals'].includes(k))
+            .filter(k => ['heatmap', 'topo', 'hazard', 'minerals', 'landing'].includes(k))
             .map(key => this.createCheckbox(key, true))
             .join('')}
         </div>

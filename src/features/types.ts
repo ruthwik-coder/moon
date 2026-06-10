@@ -38,6 +38,7 @@ export interface LayerVisibility {
   topo: boolean;
   hazard: boolean;
   minerals: boolean;
+  landing: boolean;
 }
 
 export interface HazardZone {
@@ -45,4 +46,13 @@ export interface HazardZone {
   type: 'steep_slope' | 'high_density' | 'shadow' | 'rough_terrain';
   coordinates: [number, number][];
   reason: string;
+}
+
+export interface LandingZone {
+  name: string;
+  type: string;
+  coordinates: [number, number][];
+  description: string;
+  hazards: string;
+  suitability: string;
 }
