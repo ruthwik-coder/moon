@@ -77,12 +77,11 @@ const HAZARD_ZONES: HazardZone[] = [
 
 export class HazardZonesLayer {
   private layerGroup: L.LayerGroup;
-  private visible = false;
-  private map: L.Map | null = null;
+  private visible = true;
 
   constructor() {
     this.layerGroup = L.layerGroup();
-    this.buildLayers();
+    this.loadZones();
   }
 
   private loadZones() {
@@ -114,19 +113,17 @@ export class HazardZonesLayer {
   }
 
   addTo(map: L.Map) {
-    this.map = map;
     this.layerGroup.addTo(map);
   }
 
   removeFrom() {
-    this.map = null;
     this.layerGroup.remove();
   }
 
   setVisible(visible: boolean) {
     this.visible = visible;
-    if (visible && this.map) {
-      this.layerGroup.addTo(this.map);
+    if (visible) {
+      this.layerGroup.addTo((this.layerGroup as any)._map);
     } else {
       this.layerGroup.remove();
     }
