@@ -138,7 +138,7 @@ export class CraterLayer {
 
   private updateLayer() {
     if (this.geoJsonLayer) {
-      this.geoJsonLayer.removeFrom((this.geoJsonLayer as any)._map);
+      if (this.map) this.geoJsonLayer.removeFrom(this.map);
     }
 
     const filtered = this.filterByZoom(this.craters);
@@ -179,6 +179,10 @@ export class CraterLayer {
         },
       }
     );
+
+    if (this.map) {
+      this.geoJsonLayer.addTo(this.map);
+    }
 
     this.updateLabels(filtered);
   }
