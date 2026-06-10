@@ -5,6 +5,7 @@ export class MineralLayer {
   private layerGroup: L.LayerGroup;
   private visible = true;
   private typeVisibility: Map<string, boolean>;
+  private map: L.Map | null = null;
 
   constructor() {
     this.layerGroup = L.layerGroup();
@@ -66,17 +67,19 @@ export class MineralLayer {
   }
 
   addTo(map: L.Map) {
+    this.map = map;
     this.layerGroup.addTo(map);
   }
 
   removeFrom() {
+    this.map = null;
     this.layerGroup.remove();
   }
 
   setVisible(visible: boolean) {
     this.visible = visible;
-    if (visible) {
-      this.layerGroup.addTo((this.layerGroup as any)._map);
+    if (visible && this.map) {
+      this.layerGroup.addTo(this.map);
     } else {
       this.layerGroup.remove();
     }
