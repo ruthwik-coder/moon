@@ -79,10 +79,9 @@ export class ProcessingPanel {
         <!-- ===== TAB 1: ENHANCE ===== -->
         <div class="processing-tab-content active" id="process-tab-enhance">
           <div class="process-description">
-            <strong>Improve moon imagery</strong> — Same techniques NASA uses to clean up satellite
-            images before analysis: adjust lighting, remove noise, sharpen details.
-            The left canvas shows raw map view; the right shows your edits.
-            Click <strong>"Apply to View"</strong> to overlay the processed image on the map for comparison (click overlay to dismiss).
+            <strong>Improve moon imagery</strong> — Adjust brightness/contrast, convert to grayscale,
+            or apply filters. The left canvas shows the original map view; the right shows your edits.
+            Click <strong>"Apply to View"</strong> to overlay the result on the map.
           </div>
 
           <div class="processing-preview-area">
@@ -138,9 +137,6 @@ export class ProcessingPanel {
             the visible area, runs edge detection, and finds circular features using
             <strong>OpenCV's Hough Circle Transform</strong> (if loaded) or a Canvas fallback.
             <br><br>
-            <strong>Why this matters:</strong> Planetary scientists use automated detection to count
-            craters across vast areas — what takes hours manually can be done in seconds.
-            <br><br>
             <strong>Tips:</strong>
             <ul style="margin:4px 0 0 16px;font-size:11px;color:#9ca3af">
               <li>Zoom in on a crater-rich area (zoom 4-6) for best results</li>
@@ -194,7 +190,6 @@ export class ProcessingPanel {
           <div class="process-description">
             <strong>Visualize edges</strong> in the moon imagery. Edge detection highlights boundaries
             between different terrain features — crater rims, ridges, and fault lines.
-            This is the fundamental first step in most computer vision pipelines for planetary science.
             <br><br>
             <strong>Methods:</strong>
             <ul style="margin:4px 0 0 16px;font-size:11px;color:#9ca3af">
@@ -424,34 +419,7 @@ export class ProcessingPanel {
     const existing = document.getElementById('process-overlay-img');
     if (existing) existing.remove();
 
-    img.style.cursor = 'pointer';
-    img.title = 'Click to close comparison overlay';
-
-    const overlay = document.createElement('div');
-    overlay.id = 'process-overlay-img';
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;background:transparent;display:flex;align-items:center;justify-content:center';
-
-    const inner = document.createElement('div');
-    inner.style.cssText = `position:relative;max-width:95vw;max-height:95vh`;
-
-    const closeBtn = document.createElement('button');
-    closeBtn.innerHTML = '&times;';
-    closeBtn.style.cssText = `position:absolute;top:-32px;right:0;background:rgba(0,0,0,0.7);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:4px;font-size:22px;width:32px;height:32px;cursor:pointer;z-index:10000;display:flex;align-items:center;justify-content:center;line-height:1`;
-
-    const displayImg = document.createElement('img');
-    displayImg.src = dataUrl;
-    displayImg.style.cssText = 'max-width:100%;max-height:100%;opacity:0.65;border:2px solid rgba(255,255,255,0.15);border-radius:4px;object-fit:contain';
-    displayImg.alt = 'Processed overlay';
-
-    inner.appendChild(displayImg);
-    inner.appendChild(closeBtn);
-    overlay.appendChild(inner);
-    document.body.appendChild(overlay);
-
-    const dismiss = (e?: Event) => { if (e && e.type === 'keydown' && (e as KeyboardEvent).key !== 'Escape') return; overlay.remove(); document.removeEventListener('keydown', dismiss); };
-    closeBtn.addEventListener('click', (e) => { e.stopPropagation(); dismiss(); });
-    overlay.addEventListener('click', dismiss);
-    document.addEventListener('keydown', dismiss);
+    document.body.appendChild(img);
   }
 
   private async runDetection() {

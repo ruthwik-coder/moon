@@ -54,44 +54,25 @@ export async function captureViewport(
   ctx.fillStyle = '#0a0a0f';
   ctx.fillRect(0, 0, width, height);
 
-  const tileImgs = container.querySelectorAll('img.leaflet-tile');
-  if (tileImgs.length === 0) return canvas;
+  const tiles = container.querySelectorAll('img.leaflet-tile');
+  let found = 0;
 
-  const scaleX = width / containerRect.width;
-  const scaleY = height / containerRect.height;
-
-  for (const img of tileImgs) {
+  for (const img of tiles) {
     if (!(img instanceof HTMLImageElement) || !img.complete || img.naturalWidth === 0) continue;
+    found++;
 
     const r = img.getBoundingClientRect();
-    if (r.width === 0 || r.height === 0) continue;
+    const x = ((r.left - containerRect.left) / containerRect.width) * width;
+    const y = ((r.top - containerRect.top) / containerRect.height) * height;
+    const w = (r.width / containerRect.width) * width;
+    const h = (r.height / containerRect.height) * height;
 
-    const dx = (r.left - containerRect.left) * scaleX;
-    const dy = (r.top - containerRect.top) * scaleY;
-    const dw = r.width * scaleX;
-    const dh = r.height * scaleY;
+    ctx.drawImage(img, x, y, w, h);
+  }
 
-    try {
-      let imgToDraw: CanvasImageSource | ImageBitmap = img;
-
-      const src = img.src;
-      if (src && (src.startsWith('http:') || src.startsWith('https:'))) {
-        const resp = await fetch(src, { mode: 'cors', credentials: 'omit' });
-        if (resp.ok) {
-          const blob = await resp.blob();
-          const bitmap = await createImageBitmap(blob);
-          imgToDraw = bitmap;
-        }
-      }
-
-      ctx.drawImage(imgToDraw, dx, dy, dw, dh);
-
-      if (imgToDraw instanceof ImageBitmap) {
-        imgToDraw.close();
-      }
-    } catch {
-      ctx.drawImage(img, dx, dy, dw, dh);
-    }
+  if (found === 0) {
+    ctx.fillStyle = '#0a0a0f';
+    ctx.fillRect(0, 0, width, height);
   }
 
   return canvas;
@@ -360,7 +341,7 @@ export async function cannyWithOpenCV(
 export async function houghCirclesWithOpenCV(
   canvas: HTMLCanvasElement,
   options: DetectionOptions
-): Promise<{ circles: Circle[]; edgeCanvas: HTMLCanvasElement | null; error?: string }> {
+): Promise<{ circles: Circle[]; edgeCanvas: HTMLCanvasElement | null }> {
   const cv = (window as any).cv;
   if (!cv) return { circles: [], edgeCanvas: null };
 
@@ -370,12 +351,7 @@ export async function houghCirclesWithOpenCV(
   let circlesMat: any = null;
 
   try {
-    try {
-      src = cv.imread(canvas);
-    } catch {
-      return { circles: [], edgeCanvas: null, error: 'Cannot read canvas — cross-origin tile data blocked by browser.' };
-    }
-    gray = new cv.Mat();
+    src = cv.imread(canvas);
     gray = new cv.Mat();
     edges = new cv.Mat();
     circlesMat = new cv.Mat();

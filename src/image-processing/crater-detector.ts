@@ -51,7 +51,6 @@ export async function detectCratersFromViewport(
 
   if (opencvLoaded) {
     const result = await houghCirclesWithOpenCV(canvas, opts);
-    if (result.error) throw new Error(result.error);
     circles = result.circles;
   }
 
@@ -60,7 +59,12 @@ export async function detectCratersFromViewport(
     try {
       imageData = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height);
     } catch {
-      throw new Error('Cannot read map pixels — browser blocked cross-origin tile data. This is a browser security restriction, not a bug.');
+      return {
+        craters: [],
+        processingTime: parseFloat((performance.now() - startTime).toFixed(1)),
+        method: 'canvas-sobel',
+        opencvLoaded: false,
+      };
     }
     const edges = sobelEdgeDetection(imageData);
     const ctx = document.createElement('canvas').getContext('2d')!;
@@ -71,7 +75,12 @@ export async function detectCratersFromViewport(
     try {
       edgeData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     } catch {
-      throw new Error('Cannot read map pixels — browser blocked cross-origin tile data.');
+      return {
+        craters: [],
+        processingTime: parseFloat((performance.now() - startTime).toFixed(1)),
+        method: 'canvas-sobel',
+        opencvLoaded: false,
+      };
     }
     circles = detectCirclesFromEdgesFast(edgeData, opts, canvas.width, canvas.height);
   }

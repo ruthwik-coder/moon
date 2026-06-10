@@ -42,6 +42,7 @@ const trekWacLayer = L.tileLayer(
     minZoom: 0,
     maxZoom: 7,
     errorTileUrl: TRANSPARENT_1PX,
+    crossOrigin: 'anonymous',
   }
 );
 
@@ -54,6 +55,7 @@ const usgsNAC = L.tileLayer.wms(
     minZoom: 6,
     maxZoom: 7,
     attribution: 'USGS Astrogeology LROC NAC',
+    crossOrigin: 'anonymous',
   }
 );
 
@@ -66,6 +68,7 @@ const usgsWAC = L.tileLayer.wms(
     minZoom: 0,
     maxZoom: 6,
     attribution: 'USGS Astrogeology LROC WAC',
+    crossOrigin: 'anonymous',
   }
 );
 
@@ -77,6 +80,7 @@ const ironAbundance = L.tileLayer.wms(
     transparent: true,
     opacity: 0.6,
     attribution: 'USGS/NASA Lunar Prospector GRS',
+    crossOrigin: 'anonymous',
   }
 );
 
@@ -88,6 +92,7 @@ const clementineMineral = L.tileLayer.wms(
     transparent: true,
     opacity: 0.6,
     attribution: 'USGS/NASA Clementine',
+    crossOrigin: 'anonymous',
   }
 );
 
